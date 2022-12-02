@@ -1,15 +1,21 @@
 from bs4 import BeautifulSoup
 import requests 
 from config import HEADERS, URL, DOMEN, LIST_BRANDS
-from products import insert_product
 
 # id | name | description | price | photo | memory | color | brand | call_back | url
 
+import httpx
 
-def get_html(URL, headers=HEADERS, params=' '):
-    html = requests.get(URL, headers=headers, params=params)
-    soup = BeautifulSoup(html.text, 'html.parser')
-    return soup
+async def get_html(url, headers=HEADERS, params=' '):
+    async with httpx.AsyncClient() as client:
+        r = await client.get(url, headers=headers, params=params)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        return soup
+
+# def get_html(URL, headers=HEADERS, params=' '):
+#     html = requests.get(URL, headers=headers, params=params)
+#     soup = BeautifulSoup(html.text, 'html.parser')
+#     return soup
 
 
 def get_data(soup, brand):
@@ -45,6 +51,7 @@ def get_data(soup, brand):
         local_data = get_html(url)
         img = local_data.find_all('meta')[12].get('content')
         description = local_data.find('div', class_='item__description-text').get_text(strip=True)
+        description = local_data.find('div', class_='item__description-text').get_text(strip=True)
         
         if right_name is not None:
             data.append({
@@ -60,34 +67,21 @@ def get_data(soup, brand):
             })
     
     return data  
-        
+
+            
+
 
 def parse(LIST_BRANDS, page):
     contents = []
     for brand in LIST_BRANDS:
         for page in range(1 , page+1):
-            html = get_html(URL + brand, params={'page': page})
+            html = get_html(URL+brand, params={'page': page})
             content = get_data(html, brand)
             contents.extend(content)
             print(f"Страница Бренд {brand} {page} готово!")
+
     return contents
 
-def add_products_db(items: list[dict]):
-    for item in items:
-        insert_product(
-            name=item['name'],
-            description=item['description'],
-            price=item['price'],
-            photo=item['photo'],
-            memory=item['memory'],
-            color=item['color'],
-            brand=item['brand'],
-            call_back=item['call_back'],
-            url=item['url'])
-        print(f"{item['name']} добавлен в базу данных!")
+from pprint import pprint
 
-
-
-
-items = parse(LIST_BRANDS, page=2)
-add_products_db(items=items)
+pprint(parse(LIST_BRANDS, page=2))
