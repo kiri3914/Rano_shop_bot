@@ -37,3 +37,40 @@ def insert_product(name: str,
     conn.commit()
 
 
+def get_brands():
+    query = """
+        SELECT count(brand), brand
+        FROM products
+        GROUP BY brand;"""
+    cursor.execute(query=query)
+    response = cursor.fetchall()
+    return {i[1]: i[1].title() for i in response}
+
+
+def get_phone_callbacks(brand: str = None):
+    if brand is None:
+        query = f"""
+            SELECT call_back 
+            FROM products;""" 
+    else:
+        query = f"""
+            SELECT call_back 
+            FROM products
+            where brand = '{brand}';""" 
+    
+    cursor.execute(query=query)
+    response = cursor.fetchall()
+    return {i[0]: i[0].title().replace('_', ' ') for i in response}
+
+def get_info_phone(call_back: str):
+    query = f"""
+        SELECT * 
+        FROM products
+        where call_back = '{call_back}';"""
+
+    cursor.execute(query=query)
+    response = cursor.fetchall()
+    return response
+# from pprint import pprint
+
+# pprint(get_info_phone(call_back='apple_iphone_11'))

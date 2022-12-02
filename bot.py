@@ -4,7 +4,7 @@ from telebot import types
 from config import TOKEN
 from main import insert_user, is_user_exists, create_inline_markup
 from location import insert_location, is_location_exists, update_location
-
+from products import get_brands, get_phone_callbacks, get_info_phone
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -63,12 +63,8 @@ def location(message: types.Message):
 def text(message: types.Message):
     if message.chat.type == 'private':
         if message.text.lower() == 'продукты':
-            markup = create_inline_markup(
-                    row_width=3,
-                    apple='Apple',
-                    xiaomi='Xiaomi',
-                    samsung='Samsung')
-            
+            brands = get_brands()
+            markup = create_inline_markup(row_width=3, **brands)
             bot.send_message(message.chat.id, 'Выберите: ', reply_markup=markup)
 
             
@@ -76,16 +72,13 @@ def text(message: types.Message):
 def callback_handler(call):
     try:
         if call.message:
-
-            if call.data == 'apple':
+            print(call.data)
+            print(get_phone_callbacks())
+            if call.data in get_brands():
+                phones = get_phone_callbacks(call.data)
                 markup = create_inline_markup(
                     row_width=3,
-                    iphone14='IPhone 14',
-                    iphone13='IPhone 13',
-                    iphone12='IPhone 12',
-                    iphone11='IPhone 11',
-                    iphoneX='IPhone X',
-                    ipad='IPad',
+                    **phones,
                     products='<<< Назад')
                 bot.edit_message_text(
                     chat_id=call.message.chat.id,
@@ -96,17 +89,26 @@ def callback_handler(call):
             elif call.data == 'products':
                 """продукты call back """
                 markup = create_inline_markup(
-                    row_width=3,
-                    apple='Apple',
-                    xiaomi='Xiaomi',
-                    samsung='Samsung')
-                
+                        row_width=3, 
+                        **get_brands())
                 bot.edit_message_text(
                     chat_id=call.message.chat.id,
                     message_id=call.message.message_id,
                     text='Выберите :',
                     reply_markup=markup
                 )
+# id | name | description | price | photo | memory | color |brand | call_back | url
+
+            elif call.data in get_phone_callbacks():
+                phones = get_info_phone(call.data)
+
+                for phone in phones:
+                    print(phone[4])
+                    print('help')
+                    bot.send_message(
+                            chat_id=call.message.chat.id,
+                            text=phone[4]
+                            )  
     except: 
         pass
             
